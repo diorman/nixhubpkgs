@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Resolve each "<package>": ["<version>", ...] in runtimes.json to a pinned
+# nixpkgs commit via Nixhub (the devbox search service), then GENERATE flake.nix
+# with one flake input per runtime and lock it.
+#
+# flake.nix is a generated artifact: edit runtimes.json and re-run this; don't
+# hand-edit flake.nix. Revisions are real flake inputs (lazy-trees friendly) and
+# pinned in flake.lock.
+#
+# Requires: curl, jq, nix.
+set -euo pipefail
+cd "$(dirname "$0")/.."  # repo root (script lives in bin/)
+
+API="https://search.devbox.sh/v1/resolve"
+src="runtimes.json"
+
+inputs=""
+runtimes=""
+
+while IFS='=' read -r name version; do
+  echo "==> resolving ${name}@${version}" >&2
+
+  json="$(curl -fsS -m 30 --get "$API" \
+    --data-urlencode "name=${name}" \
+    --data-urlencode "version=${version}")"
+
+  commit="$(jq -r '.commit_hash' <<<"$json")"
+  # attr_paths is per-system but identical across systems; take the first system's first attr.
+  attr="$(jq -r '.systems | to_entries[0].value.attr_paths[0]' <<<"$json")"
+
+  if [[ -z "$commit" || "$commit" == "null" ]]; then
+    echo "    !! could not resolve ${name}@${version}" >&2
+    exit 1
+  fi
+  echo "    commit=${commit} attr=${attr}" >&2
+
+  input_name="${name}_${version//./_}"  # e.g. ruby_3_3_10
+  out_key="${name}-${version}"          # e.g. ruby-3.3.10
+  inputs+="    ${input_name}.url = \"github:NixOS/nixpkgs/${commit}\";"$'\n'
+  runtimes+="        \"${out_key}\" = { input = \"${input_name}\"; attr = \"${attr}\"; };"$'\n'
+done < <(jq -r 'to_entries[] | .key as $k | .value[] | "\($k)=\(.)"' "$src")
+
+cat >flake.nix <<EOF
+{
+  description = "Pinned language runtimes. GENERATED from runtimes.json by ./bin/update — edit runtimes.json and re-run, don't hand-edit this file.";
+
+  inputs = {
+    flake-utils.url = "github:numtide/flake-utils";
+${inputs}  };
+
+  outputs =
+    { self, flake-utils, ... }@inputs:
+    let
+      # output name -> { input = <flake input name>; attr = <nixpkgs attribute>; }
+      runtimes = {
+${runtimes}      };
+    in
+    flake-utils.lib.eachDefaultSystem (system: {
+      packages = builtins.mapAttrs (
+        _name: spec: inputs.\${spec.input}.legacyPackages.\${system}.\${spec.attr}
+      ) runtimes;
+    });
+}
+EOF
+
+echo "==> wrote flake.nix; locking..." >&2
+nix flake lock
+echo "==> done" >&2
