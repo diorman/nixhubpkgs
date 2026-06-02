@@ -21,7 +21,8 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "ruby_3_3_10": "ruby_3_3_10"
+        "ruby_3_3_10": "ruby_3_3_10",
+        "ruby_3_3_7": "ruby_3_3_7"
       }
     },
     "ruby_3_3_10": {
@@ -37,6 +38,22 @@
         "owner": "NixOS",
         "repo": "nixpkgs",
         "rev": "a1bab9e494f5f4939442a57a58d0449a109593fe",
+        "type": "github"
+      }
+    },
+    "ruby_3_3_7": {
+      "locked": {
+        "lastModified": 1744868846,
+        "narHash": "sha256-5RJTdUHDmj12Qsv7XOhuospjAjATNiTMElplWnJE9Hs=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "ebe4301cbd8f81c4f8d3244b3632338bbeb6d49c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "ebe4301cbd8f81c4f8d3244b3632338bbeb6d49c",
         "type": "github"
       }
     },

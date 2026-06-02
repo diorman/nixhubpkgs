@@ -3,6 +3,7 @@
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
+    ruby_3_3_7.url = "github:NixOS/nixpkgs/ebe4301cbd8f81c4f8d3244b3632338bbeb6d49c";
     ruby_3_3_10.url = "github:NixOS/nixpkgs/a1bab9e494f5f4939442a57a58d0449a109593fe";
   };
 
@@ -11,6 +12,7 @@
     let
       # output name -> { input = <flake input name>; attr = <nixpkgs attribute>; }
       runtimes = {
+        "ruby-3.3.7" = { input = "ruby_3_3_7"; attr = "ruby"; };
         "ruby-3.3.10" = { input = "ruby_3_3_10"; attr = "ruby"; };
       };
     in
