@@ -1,5 +1,5 @@
 {
-  description = "Pinned language runtimes. GENERATED from runtimes.json by ./bin/update — edit runtimes.json and re-run, don't hand-edit this file.";
+  description = "Pinned language runtimes. GENERATED from packages.json by ./bin/update — edit packages.json and re-run, don't hand-edit this file.";
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";

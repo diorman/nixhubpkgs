@@ -11,12 +11,12 @@ source builds, no overlay.
 
 ## How it works
 
-- **`runtimes.json`** — the source of truth you edit: `package -> [versions]`.
+- **`packages.json`** — the source of truth you edit: `package -> [versions]`.
 - **`./bin/update`** — resolves each version to a nixpkgs commit + attr, then…
 - **generates `flake.nix`** — one real flake **input** per runtime
   (`<pkg>_<ver>.url = github:NixOS/nixpkgs/<commit>`) and `flake.lock` pins them.
 
-`flake.nix` is a **generated artifact** — don't hand-edit it; edit `runtimes.json`
+`flake.nix` is a **generated artifact** — don't hand-edit it; edit `packages.json`
 and re-run `./bin/update`. Using real flake inputs (rather than `fetchTarball`)
 keeps things lazy-trees friendly and pins revisions in `flake.lock`.
 
@@ -49,6 +49,6 @@ nix shell github:diorman/nixhubpkgs#"ruby-3.3.10"
 
 ## Adding / bumping a version
 
-1. Edit `runtimes.json` (add a package or a version string).
+1. Edit `packages.json` (add a package or a version string).
 2. Run `./bin/update` (needs `curl`, `jq`, `nix`) — regenerates `flake.nix` + `flake.lock`.
-3. Commit `runtimes.json`, `flake.nix`, and `flake.lock`.
+3. Commit `packages.json`, `flake.nix`, and `flake.lock`.

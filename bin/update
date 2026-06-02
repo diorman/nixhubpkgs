@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Resolve each "<package>": ["<version>", ...] in runtimes.json to a pinned
+# Resolve each "<package>": ["<version>", ...] in packages.json to a pinned
 # nixpkgs commit via Nixhub (the devbox search service), then GENERATE flake.nix
 # with one flake input per runtime and lock it.
 #
-# flake.nix is a generated artifact: edit runtimes.json and re-run this; don't
+# flake.nix is a generated artifact: edit packages.json and re-run this; don't
 # hand-edit flake.nix. Revisions are real flake inputs (lazy-trees friendly) and
 # pinned in flake.lock.
 #
@@ -12,7 +12,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."  # repo root (script lives in bin/)
 
 API="https://search.devbox.sh/v1/resolve"
-src="runtimes.json"
+src="packages.json"
 
 inputs=""
 runtimes=""
@@ -42,7 +42,7 @@ done < <(jq -r 'to_entries[] | .key as $k | .value[] | "\($k)=\(.)"' "$src")
 
 cat >flake.nix <<EOF
 {
-  description = "Pinned language runtimes. GENERATED from runtimes.json by ./bin/update — edit runtimes.json and re-run, don't hand-edit this file.";
+  description = "Pinned language runtimes. GENERATED from packages.json by ./bin/update — edit packages.json and re-run, don't hand-edit this file.";
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
