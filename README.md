@@ -1,4 +1,4 @@
-# nix-runtimes
+# nixhubpkgs
 
 Pinned language runtimes exposed as flake outputs — a small, self-maintained
 stand-in for Nixhub/devbox, for projects that use [devenv](https://devenv.sh)
@@ -30,7 +30,7 @@ keeps things lazy-trees friendly and pins revisions in `flake.lock`.
 # devenv.yaml
 inputs:
   runtimes:
-    url: github:diorman/nix-runtimes
+    url: github:diorman/nixhubpkgs
 ```
 
 ```nix
@@ -44,7 +44,7 @@ languages.ruby = {
 ## Usage (plain nix)
 
 ```sh
-nix shell github:diorman/nix-runtimes#"ruby-3.3.10"
+nix shell github:diorman/nixhubpkgs#"ruby-3.3.10"
 ```
 
 ## Adding / bumping a version
