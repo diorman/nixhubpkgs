@@ -1,0 +1,18 @@
+{
+  "nodejs-24.12.0": {
+    "attr": "nodejs_24",
+    "commit": "3edc4a30ed3903fdf6f90c837f961fa6b49582d1"
+  },
+  "ruby-3.3.10": {
+    "attr": "ruby",
+    "commit": "a1bab9e494f5f4939442a57a58d0449a109593fe"
+  },
+  "ruby-3.3.7": {
+    "attr": "ruby",
+    "commit": "ebe4301cbd8f81c4f8d3244b3632338bbeb6d49c"
+  },
+  "terraform-1.9.8": {
+    "attr": "terraform",
+    "commit": "34a626458d686f1b58139620a8b2793e9e123bba"
+  }
+}

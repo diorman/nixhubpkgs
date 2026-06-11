@@ -1,48 +1,95 @@
 #!/usr/bin/env bash
-# Resolve each "<package>": ["<version>", ...] in packages.json to a pinned
-# nixpkgs commit via Nixhub (the devbox search service), then GENERATE flake.nix
-# with one flake input per runtime and lock it.
+# Resolve each "<package>": ["<version>", ...] in pkgs.json to a pinned nixpkgs
+# commit via Nixhub (the devbox search service), caching the result in
+# pkgs-lock.json, then GENERATE flake.nix from that lock and lock it.
 #
-# flake.nix is a generated artifact: edit packages.json and re-run this; don't
-# hand-edit flake.nix. Revisions are real flake inputs (lazy-trees friendly) and
-# pinned in flake.lock.
+# pkgs.json        -- human-edited input: { "<package>": ["<version>", ...] }
+# pkgs-lock.json   -- generated cache: "<package>-<version>" -> { commit, attr }
+# flake.nix        -- generated from pkgs-lock.json (one flake input per pin)
+#
+# Resolution is cached: a package-version already in pkgs-lock.json is reused
+# verbatim (no network), so existing pins never drift. Entries no longer in
+# pkgs.json are pruned. pkgs.json and flake.nix are GENERATED here -- edit
+# pkgs.json and re-run; don't hand-edit pkgs-lock.json or flake.nix.
+#
+# Usage:
+#   bin/update                       reuse the lock; resolve only new pins
+#   bin/update --refresh             ignore the lock; re-resolve everything
+#   bin/update --refresh <pkg>       re-resolve every version of <pkg>
+#   bin/update --refresh <pkg>@<ver> re-resolve just that version
 #
 # Requires: curl, jq, nix.
 set -euo pipefail
 cd "$(dirname "$0")/.."  # repo root (script lives in bin/)
 
 API="https://search.devbox.sh/v1/resolve"
-src="packages.json"
+src="pkgs.json"
+lock="pkgs-lock.json"
+
+refresh_all=false
+refresh_filter=""
+case "${1:-}" in
+  --refresh) refresh_filter="${2:-}"; [[ -z "$refresh_filter" ]] && refresh_all=true ;;
+  "")        ;;
+  *)         echo "usage: $0 [--refresh [<pkg>|<pkg>@<ver>]]" >&2; exit 2 ;;
+esac
+
+oldlock="$(cat "$lock" 2>/dev/null || echo '{}')"
+newlock='{}'
+
+while IFS='=' read -r name version; do
+  key="${name}-${version}"
+
+  do_refresh=false
+  if $refresh_all; then
+    do_refresh=true
+  elif [[ -n "$refresh_filter" && ( "$refresh_filter" == "$name" || "$refresh_filter" == "${name}@${version}" ) ]]; then
+    do_refresh=true
+  fi
+
+  commit=""; attr=""
+  if ! $do_refresh; then
+    commit="$(jq -r --arg k "$key" '.[$k].commit // empty' <<<"$oldlock")"
+    attr="$(jq -r --arg k "$key" '.[$k].attr // empty' <<<"$oldlock")"
+  fi
+
+  if [[ -n "$commit" && -n "$attr" ]]; then
+    echo "==> reusing ${key} (commit=${commit})" >&2
+  else
+    echo "==> resolving ${name}@${version}" >&2
+    json="$(curl -fsS -m 30 --get "$API" \
+      --data-urlencode "name=${name}" \
+      --data-urlencode "version=${version}")"
+
+    commit="$(jq -r '.commit_hash // empty' <<<"$json")"
+    # attr_paths is per-system but identical across systems; take the first system's first attr.
+    attr="$(jq -r '.systems | to_entries[0].value.attr_paths[0] // empty' <<<"$json")"
+
+    if [[ -z "$commit" || -z "$attr" ]]; then
+      echo "    !! could not resolve ${name}@${version}" >&2
+      exit 1
+    fi
+    echo "    commit=${commit} attr=${attr}" >&2
+  fi
+
+  newlock="$(jq --arg k "$key" --arg c "$commit" --arg a "$attr" \
+    '.[$k] = {attr: $a, commit: $c}' <<<"$newlock")"
+done < <(jq -r 'to_entries[] | .key as $k | .value[] | "\($k)=\(.)"' "$src")
+
+# Write the lock with sorted keys for clean diffs; flake.nix is generated from it.
+jq -S . <<<"$newlock" >"$lock"
 
 inputs=""
 runtimes=""
-
-while IFS='=' read -r name version; do
-  echo "==> resolving ${name}@${version}" >&2
-
-  json="$(curl -fsS -m 30 --get "$API" \
-    --data-urlencode "name=${name}" \
-    --data-urlencode "version=${version}")"
-
-  commit="$(jq -r '.commit_hash' <<<"$json")"
-  # attr_paths is per-system but identical across systems; take the first system's first attr.
-  attr="$(jq -r '.systems | to_entries[0].value.attr_paths[0]' <<<"$json")"
-
-  if [[ -z "$commit" || "$commit" == "null" ]]; then
-    echo "    !! could not resolve ${name}@${version}" >&2
-    exit 1
-  fi
-  echo "    commit=${commit} attr=${attr}" >&2
-
-  input_name="${name}_${version//./_}"  # e.g. ruby_3_3_10
-  out_key="${name}-${version}"          # e.g. ruby-3.3.10
+while IFS=$'\t' read -r key commit attr; do
+  input_name="${key//[.-]/_}"  # e.g. ruby-3.3.10 -> ruby_3_3_10
   inputs+="    ${input_name}.url = \"github:NixOS/nixpkgs/${commit}\";"$'\n'
-  runtimes+="        \"${out_key}\" = { input = \"${input_name}\"; attr = \"${attr}\"; };"$'\n'
-done < <(jq -r 'to_entries[] | .key as $k | .value[] | "\($k)=\(.)"' "$src")
+  runtimes+="        \"${key}\" = { input = \"${input_name}\"; attr = \"${attr}\"; };"$'\n'
+done < <(jq -r 'to_entries[] | [.key, .value.commit, .value.attr] | @tsv' "$lock")
 
 cat >flake.nix <<EOF
 {
-  description = "Pinned language runtimes. GENERATED from packages.json by ./bin/update — edit packages.json and re-run, don't hand-edit this file.";
+  description = "Pinned language runtimes. GENERATED from pkgs.json by ./bin/update — edit pkgs.json and re-run, don't hand-edit this file.";
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
@@ -63,6 +110,6 @@ ${runtimes}      };
 }
 EOF
 
-echo "==> wrote flake.nix; locking..." >&2
+echo "==> wrote pkgs-lock.json and flake.nix; locking..." >&2
 nix flake lock
 echo "==> done" >&2
