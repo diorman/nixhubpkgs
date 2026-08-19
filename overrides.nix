@@ -5,7 +5,14 @@
 # the normal way through pkgs.json.
 { inputs, system }:
 let
-  pkgs = inputs.nixpkgs_overrides.legacyPackages.${system};
+  base = inputs.nixpkgs_overrides;
+  pkgs = base.legacyPackages.${system};
+  # ruby's `passthru.version` is a structured object (with .major/.libDir/etc.),
+  # NOT a plain string — code like ruby-modules does `ruby.version.major`. Rebuild
+  # a proper 3.4.10 object with nixpkgs' own helper instead of a bare string.
+  mkRubyVersion = import "${base}/pkgs/development/interpreters/ruby/ruby-version.nix" {
+    inherit (pkgs) lib;
+  };
 in
 {
   # ruby 3.4.10 is released upstream but not yet in nixpkgs (ruby_3_4 = 3.4.9),
@@ -17,8 +24,7 @@ in
       url = "https://cache.ruby-lang.org/pub/ruby/3.4/ruby-${version}.tar.gz";
       hash = "sha256-7O4tByoU8tFDR91W39j+XDEwq/URe/qsvaD075zEKew=";
     };
-    # ruby exposes `version` via passthru (used by e.g. devenv), which
-    # overrideAttrs doesn't touch — keep it in sync so consumers see 3.4.10.
-    passthru = (old.passthru or { }) // { inherit version; };
+    # Keep the structured passthru.version in sync so consumers see 3.4.10.
+    passthru = (old.passthru or { }) // { version = mkRubyVersion "3" "4" "10" ""; };
   });
 }
