@@ -18,6 +18,22 @@
         "type": "github"
       }
     },
+    "nixpkgs_overrides": {
+      "locked": {
+        "lastModified": 1787111413,
+        "narHash": "sha256-sFosWtq21eHGJRnTc/hvf4M1obRgLEUMNm/IzllkHMA=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "afe3d8ac4395617bdcdac9f188ac8717a062e014",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "afe3d8ac4395617bdcdac9f188ac8717a062e014",
+        "type": "github"
+      }
+    },
     "nodejs_24_12_0": {
       "locked": {
         "lastModified": 1766840161,
@@ -37,6 +53,7 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
+        "nixpkgs_overrides": "nixpkgs_overrides",
         "nodejs_24_12_0": "nodejs_24_12_0",
         "ruby_3_3_10": "ruby_3_3_10",
         "ruby_3_3_7": "ruby_3_3_7",

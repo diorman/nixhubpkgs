@@ -7,6 +7,7 @@
     ruby_3_3_10.url = "github:NixOS/nixpkgs/a1bab9e494f5f4939442a57a58d0449a109593fe";
     ruby_3_3_7.url = "github:NixOS/nixpkgs/ebe4301cbd8f81c4f8d3244b3632338bbeb6d49c";
     terraform_1_9_8.url = "github:NixOS/nixpkgs/34a626458d686f1b58139620a8b2793e9e123bba";
+    nixpkgs_overrides.url = "github:NixOS/nixpkgs/afe3d8ac4395617bdcdac9f188ac8717a062e014";
   };
 
   outputs =
@@ -23,6 +24,6 @@
     flake-utils.lib.eachDefaultSystem (system: {
       packages = builtins.mapAttrs (
         _name: spec: inputs.${spec.input}.legacyPackages.${system}.${spec.attr}
-      ) runtimes;
+      ) runtimes // (import ./overrides.nix { inherit inputs system; });
     });
 }

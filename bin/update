@@ -87,6 +87,17 @@ while IFS=$'\t' read -r key commit attr; do
   runtimes+="        \"${key}\" = { input = \"${input_name}\"; attr = \"${attr}\"; };"$'\n'
 done < <(jq -r 'to_entries[] | [.key, .value.commit, .value.attr] | @tsv' "$lock")
 
+# Optional hand-maintained source-built overrides (overrides.json pins their base
+# nixpkgs inputs; overrides.nix defines the derivations). Merged into packages
+# below. Absent files => empty, so removing them is a clean no-op.
+overrides_expr=""
+if [[ -f overrides.json && -f overrides.nix ]]; then
+  while IFS=$'\t' read -r iname commit; do
+    inputs+="    ${iname}.url = \"github:NixOS/nixpkgs/${commit}\";"$'\n'
+  done < <(jq -r 'to_entries[] | [.key, .value] | @tsv' overrides.json)
+  overrides_expr=" // (import ./overrides.nix { inherit inputs system; })"
+fi
+
 cat >flake.nix <<EOF
 {
   description = "Pinned language runtimes. GENERATED from pkgs.json by ./bin/update — edit pkgs.json and re-run, don't hand-edit this file.";
@@ -105,7 +116,7 @@ ${runtimes}      };
     flake-utils.lib.eachDefaultSystem (system: {
       packages = builtins.mapAttrs (
         _name: spec: inputs.\${spec.input}.legacyPackages.\${system}.\${spec.attr}
-      ) runtimes;
+      ) runtimes${overrides_expr};
     });
 }
 EOF
