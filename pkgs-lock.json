@@ -11,6 +11,10 @@
     "attr": "ruby",
     "commit": "ebe4301cbd8f81c4f8d3244b3632338bbeb6d49c"
   },
+  "temurin-bin-17-17.0.11": {
+    "attr": "temurin-bin-17",
+    "commit": "b60793b86201040d9dee019a05089a9150d08b5b"
+  },
   "terraform-1.9.8": {
     "attr": "terraform",
     "commit": "34a626458d686f1b58139620a8b2793e9e123bba"

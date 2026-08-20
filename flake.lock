@@ -57,6 +57,7 @@
         "nodejs_24_12_0": "nodejs_24_12_0",
         "ruby_3_3_10": "ruby_3_3_10",
         "ruby_3_3_7": "ruby_3_3_7",
+        "temurin_bin_17_17_0_11": "temurin_bin_17_17_0_11",
         "terraform_1_9_8": "terraform_1_9_8"
       }
     },
@@ -104,6 +105,22 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
+        "type": "github"
+      }
+    },
+    "temurin_bin_17_17_0_11": {
+      "locked": {
+        "lastModified": 1720338227,
+        "narHash": "sha256-PlL/yXNX/C87S2N8lF/HfOJhHForf/l7E6lVWZ4jMrw=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "b60793b86201040d9dee019a05089a9150d08b5b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "b60793b86201040d9dee019a05089a9150d08b5b",
         "type": "github"
       }
     },
