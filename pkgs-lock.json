@@ -3,6 +3,10 @@
     "attr": "nodejs_24",
     "commit": "3edc4a30ed3903fdf6f90c837f961fa6b49582d1"
   },
+  "ruby-3.2.2": {
+    "attr": "ruby_3_2",
+    "commit": "dd5621df6dcb90122b50da5ec31c411a0de3e538"
+  },
   "ruby-3.3.10": {
     "attr": "ruby",
     "commit": "a1bab9e494f5f4939442a57a58d0449a109593fe"

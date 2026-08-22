@@ -55,10 +55,27 @@
         "flake-utils": "flake-utils",
         "nixpkgs_overrides": "nixpkgs_overrides",
         "nodejs_24_12_0": "nodejs_24_12_0",
+        "ruby_3_2_2": "ruby_3_2_2",
         "ruby_3_3_10": "ruby_3_3_10",
         "ruby_3_3_7": "ruby_3_3_7",
         "temurin_bin_17_17_0_11": "temurin_bin_17_17_0_11",
         "terraform_1_9_8": "terraform_1_9_8"
+      }
+    },
+    "ruby_3_2_2": {
+      "locked": {
+        "lastModified": 1705204527,
+        "narHash": "sha256-WVz9WdaFBhAwO/7A+HlW8HPJ4VQ8QnpCD1WZAcAPneo=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "dd5621df6dcb90122b50da5ec31c411a0de3e538",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "dd5621df6dcb90122b50da5ec31c411a0de3e538",
+        "type": "github"
       }
     },
     "ruby_3_3_10": {
