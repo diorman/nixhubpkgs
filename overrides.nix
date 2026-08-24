@@ -27,4 +27,17 @@ in
     # Keep the structured passthru.version in sync so consumers see 3.4.10.
     passthru = (old.passthru or { }) // { version = mkRubyVersion "3" "4" "10" ""; };
   });
+
+  # ruby 3.3.12 is released upstream but not yet in nixpkgs (ruby_3_3 = 3.3.10),
+  # so it can't be pinned to a prebuilt binary. Build it from source by bumping
+  # the version + tarball on the 3.3.10 derivation.
+  "ruby-3.3.12" = pkgs.ruby_3_3.overrideAttrs (old: rec {
+    version = "3.3.12";
+    src = pkgs.fetchurl {
+      url = "https://cache.ruby-lang.org/pub/ruby/3.3/ruby-${version}.tar.gz";
+      hash = "sha256-sG1jvq4nGTMDPifwo4m8WCoAnnhFNX1ENlw53lJaBRs=";
+    };
+    # Keep the structured passthru.version in sync so consumers see 3.3.12.
+    passthru = (old.passthru or { }) // { version = mkRubyVersion "3" "3" "12" ""; };
+  });
 }
