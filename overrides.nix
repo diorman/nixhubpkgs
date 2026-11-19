@@ -9,12 +9,24 @@ let
   pkgs = base.legacyPackages.${system};
   # ruby's `passthru.version` is a structured object (with .major/.libDir/etc.),
   # NOT a plain string — code like ruby-modules does `ruby.version.major`. Rebuild
-  # a proper 3.4.10 object with nixpkgs' own helper instead of a bare string.
+  # a proper version object with nixpkgs' own helper instead of a bare string.
   mkRubyVersion = import "${base}/pkgs/development/interpreters/ruby/ruby-version.nix" {
     inherit (pkgs) lib;
   };
 in
 {
+  # ruby 3.4.13 is released upstream but not yet resolvable through Nixhub.
+  # Build it from source using the same base as the other 3.4 overrides.
+  "ruby-3.4.13" = pkgs.ruby_3_4.overrideAttrs (old: rec {
+    version = "3.4.13";
+    src = pkgs.fetchurl {
+      url = "https://cache.ruby-lang.org/pub/ruby/3.4/ruby-${version}.tar.gz";
+      hash = "sha256-0NO/PdjCJKPDt+zYFqDxssvPT4e1r8vb6R0/7xd/NRo=";
+    };
+    # Keep the structured passthru.version in sync so consumers see 3.4.13.
+    passthru = (old.passthru or { }) // { version = mkRubyVersion "3" "4" "13" ""; };
+  });
+
   # ruby 3.4.12 is released upstream but not yet in nixpkgs (ruby_3_4 = 3.4.9),
   # so it can't be pinned to a prebuilt binary. Build it from source by bumping
   # the version + tarball on the 3.4.9 derivation.
